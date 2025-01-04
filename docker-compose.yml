@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    ports:
+      - "5672:5672"      # Основной порт RabbitMQ
+      - "15672:15672"    # Порт панели управления
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  metrics:
+    build: ./metrics
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  features:
+    build: ./features
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  model:
+    build: ./model
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  plot:
+    build: ./plot
+    depends_on:
+      - metrics
+    volumes:
+      - ./logs:/app/logs
+    environment:
+      - PYTHONUNBUFFERED=1
+
+volumes:
+  rabbitmq_data:
